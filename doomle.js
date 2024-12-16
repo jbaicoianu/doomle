@@ -64,14 +64,17 @@ room.registerElement('doom-wordle', {
     let keyboardslot = masterlayout.createObject('layout-slot', { slotname: 'keyboardslot', pos: V(-.65, .8, 0) });
 
     this.logo = this.createObject('object', {
+      js_id: 'doomle_logo',
       id: 'plane',
       image_id: 'doomle',
-      scale: V(4, 1, 1),
-      pos: V(0, 4.6, -3.15)
+      scale: V(1.569, .392, 1),
+      pos: V(0, 2.8, 0)
     })
     this.face = this.createObject('doom-wordle-face', {
-      pos: V(-.21, 4.6, -3.1),
+      js_id: 'doomle_hud',
+      pos: V(-.08, 2.8, .02),
       wad: this.iwad,
+      scale: V(.385),
     })
 
     this.guesses = [
@@ -388,21 +391,26 @@ room.registerElement('doom-wordle-letter', {
       lighting: false,
       col: V(1),
       collision_id: (this.clickable ? 'cube' : null),
+      collision_scale: V(1,1,.1),
     });
     if (this.clickable) {
       this.backdrop.addEventListener('click', ev => this.handleClick(ev));
       this.backdrop.addEventListener('mousedown', ev => this.handleMouseDown(ev));
       this.backdrop.addEventListener('mouseup', ev => this.handleMouseUp(ev));
+      this.backdrop.addEventListener('mouseover', ev => this.handleMouseOver(ev));
+      this.backdrop.addEventListener('mouseout', ev => this.handleMouseOut(ev));
     }
     //let font = (this.letter == '<' || this.letter == '↵' ? 'helvetiker' : 'doomfont');
     if (true) { //this.letter == '⌫') {
       this.updateText();
       this.text = this.backdrop.createObject('object', {
         id: 'plane',
+        pickable: false,
         image_id: 'label',
         scale: V(.15 * 4),
         transparent: true,
-        pos: V(0,0,.01),
+        pos: V(0,0,.02),
+        depth_test: false,
       });
     } else {
       this.text = this.createObject('text', {
@@ -464,17 +472,26 @@ room.registerElement('doom-wordle-letter', {
   handleClick(ev) {
   },
   handleMouseDown(ev) {
-    this.backdrop.pos = V(0, 0, -.05);
+    this.backdrop.pos = V(0, 0, -.04);
     //this.text.pos = V(0, 0, -.05);
     navigator.vibrate(20);
     this.dispatchEvent({type: 'keydown', data: this.letter, bubbles: true }); 
 setTimeout(() => {
-    this.backdrop.pos = V(0, 0, 0);
+    //this.backdrop.pos = V(0, 0, -.03);
     //this.text.pos = V(0, 0, .01);
 }, 60);
   },
   handleMouseUp(ev) {
+    this.backdrop.pos = V(0, 0, 0);
   },
+  handleMouseOver(ev) {
+    if (this.contains(ev.target)) {
+      this.backdrop.pos.z = -.02;
+    }
+  },
+  handleMouseOut(ev) {
+    this.backdrop.pos.z = 0;
+  }
 });
 room.registerElement('doom-wordle-indicator', {
   num: 0,
@@ -501,6 +518,12 @@ room.registerElement('doom-wordle-indicator', {
 room.registerElement('doom-wordle-keyboard', {
   layout: 'qwertyuiop\nasdfghjkl\n↵zxcvbnm⌫',
   create() {
+    this.backdrop = this.createObject('object', {
+      collision_id: 'plane',
+      col: 'pink',
+      scale: V(3.5, 1.25, 1),
+      pos: V(1.35, -.3, -.2),
+    });
     this.letters = {};
     let x = 0, y = 0;
     for (let i = 0; i < this.layout.length; i++) {
