@@ -256,20 +256,17 @@ screen.orientation.addEventListener('change', ev => this.handleOrientationChange
           letter = slot.letter;
       let idx = letters.indexOf(letter, seen[letter]);
       if (letters[i] == letter) {
-console.log('found:', i, letter);
         slot.setState('found');
         letters[i] = null;
         //seen[letter] = idx+1;
         this.keyboard.markFound(letter);
       }
     }
-console.log('aaaa', letters, seen);
     // next, find misplaced and not-found letters
     for (let i = 0; i < guess.letters; i++) {
       let slot = guess.slots[i],
           letter = slot.letter;
       let idx = letters.indexOf(letter, seen[letter]);
-console.log('check?', letter, idx, letters, seen)
       
       if (!letters[i]) continue;
       if (idx != -1) {
