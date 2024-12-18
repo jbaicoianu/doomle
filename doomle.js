@@ -56,7 +56,8 @@ room.registerElement('doom-wordle', {
         aspect = 2,
         scale = 15,
         repeaty = 2000;
-    this.backdrop = this.createObject('object', { id: 'plane', image_id: 'skintek1', pos: V(0, -(scale * (repeaty - 3)) / 2, -4.5), scale: V(scale * 3, scale * repeaty), texture_repeat: V(3, repeaty * aspect), pickable: false, collidable: false, });
+    //this.backdrop = this.createObject('object', { id: 'plane', image_id: 'skintek1', pos: V(0, -(scale * (repeaty - 3)) / 2, -4.5), scale: V(scale * 3, scale * repeaty), texture_repeat: V(3, repeaty * aspect), pickable: false, collidable: false, });
+    this.environment = this.createRandomRoom();
 
     this.layout = this.createObject('layout-template', { transitioneasing: 'ease-out-elastic', transitiontime: 750 });
     let masterlayout = this.layout.createObject('layout-master');
@@ -113,7 +114,7 @@ screen.orientation.addEventListener('change', ev => this.handleOrientationChange
     let tex = this.iwad.getTexture(name);
     this.loadNewAsset('image', { id: name, canvas: tex.canvas, tex_linear: false,});
 //console.log('did tex', name, tex);
-
+    return tex;
   },
   showInfo(item) {
     this.infobox.show(item);
@@ -197,6 +198,9 @@ screen.orientation.addEventListener('change', ev => this.handleOrientationChange
     return this.answerwords[Math.floor(Math.random() * this.answerwords.length)]
   },
   reset() {
+    this.transition.reset();
+    if (this.environment) this.environment.die();
+    this.environment = this.createRandomRoom();
     this.currentword = this.getWord();
     this.playSound('dssgcock');
     this.keyboard.reset();
@@ -320,7 +324,72 @@ console.log('check?', letter, idx, letters, seen)
       janus.engine.systems.sound.enableSound();
     }
   },
-  
+  createRandomRoom() {
+    let walltextures = ['ashwall', 'brown1', 'brown144', 'brown96', 'browngrn', 'brownhug', 'brownpip', 'comptile', 'compute3', 'gray4', 'gray5', 'gray7', 'starg3', 'startan2', 'startan3', 'stone', 'stone2', 'stone3', 'tekwall1', 'tekwall2', 'tekwall3', 'tekwall4', 'tekwall5', 'nukedge1', 'cement1', 'cement2', 'cement3', 'cement4', 'cement5', 'cement6', 'firemag1', 'firemag2', 'firemag3', 'gstone1', 'gstone2', 'skinlow', 'skinmet1', 'skinmet2', 'skinsymb', 'starbr2', 'starg2', 'stargr2', ],
+        floortextures = ['floor0_1', 'floor0_3', 'floor0_6', 'floor5_4', 'floor6_1', 'floor6_2', 'floor7_1', 'floor7_2', 'mflr8_1', 'floor4_8', 'floor5_1', 'floor5_2', 'floor5_3'],
+        ceiltextures = ['floor0_1', 'floor0_3', 'floor0_6', 'floor5_4', 'floor6_1', 'floor6_2', 'floor7_1', 'floor7_2', 'mflr8_1', 'floor4_8', 'floor5_1', 'floor5_2', 'floor5_3'];
+
+
+    let floortex = floortextures[Math.floor(Math.random() * floortextures.length)],
+        ceiltex = ceiltextures[Math.floor(Math.random() * ceiltextures.length)],
+        walltex = walltextures[Math.floor(Math.random() * walltextures.length)];
+
+    let nuketextures = ['nukedge1'],
+        lavatextures = ['firemag1', 'firemag2', 'firemag3'],
+        bloodtextures = ['gstone2'];
+
+    if (nuketextures.indexOf(walltex) != -1) floortex = 'nukage1';
+    else if (lavatextures.indexOf(walltex) != -1) floortex = 'floor6_1';
+    else if (bloodtextures.indexOf(walltex) != -1) floortex = 'blood1';
+
+    let width = Math.floor(Math.random() * 10) + 5,
+        height = Math.floor(Math.random() * 2) + 5,
+        depth = Math.floor(Math.random() * 10) + 10;
+
+    let floortexdef = this.loadTexture(floortex);
+    let ceiltexdef = this.loadTexture(ceiltex);
+    let walltexdef = this.loadTexture(walltex);
+
+    let floortexaspect = floortexdef.canvas.width / floortexdef.canvas.height,
+        ceiltexaspect = ceiltexdef.canvas.width / ceiltexdef.canvas.height,
+        walltexaspect = walltexdef.canvas.width / walltexdef.canvas.height;
+
+    let myroom = this.createObject('object');
+    let walls = [
+      myroom.createObject('object', {
+        id: 'plane',
+        image_id: walltex,
+        pos: V(0, height / 2 - .5, -depth / 2),
+        scale: V(width, height, 1)
+      }),
+      myroom.createObject('object', {
+        id: 'plane',
+        image_id: walltex,
+        pos: V(0, height / 2 - .5, depth / 2),
+        scale: V(width, height, 1),
+        rotation: V(0, 180, 0),
+        texture_repeat: V(1, 1)
+      }),
+      myroom.createObject('object', {
+        id: 'plane',
+        image_id: walltex,
+        pos: V(-width / 2, height / 2 - .5, 0),
+        scale: V(depth, height, 1),
+        rotation: V(0, 90, 0),
+        texture_repeat: V(width / 4, 1)
+      }),
+      myroom.createObject('object', {
+        id: 'plane',
+        image_id: walltex,
+        pos: V(width / 2, height / 2 - .5, 0),
+        scale: V(depth, height, 1),
+        rotation: V(0, -90, 0)
+      }),
+    ];
+    let ceil = myroom.createObject('object', { id: 'plane', image_id: ceiltex, pos: V(0, height - .5, 0), scale: V(width, depth, 1), rotation: V(90, 0, 0), texture_repeat: V(width / 2, depth / 2) });
+    let floor = myroom.createObject('object', { id: 'plane', image_id: floortex, pos: V(0, -.5, 0), scale: V(width, depth, 1), rotation: V(-90, 0, 0) , texture_repeat: V(width / 2, depth / 2)});
+    return myroom;
+  }
 });
 room.registerElement('doom-wordle-guess', {
   letters: 5,
