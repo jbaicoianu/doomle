@@ -104,6 +104,10 @@ room.registerElement('doom-wordle', {
     //this.list.addEventListener('itemselect', ev => this.showInfo(ev.target));
 screen.orientation.addEventListener('change', ev => this.handleOrientationChange(ev))
 
+    this.transition = player.createObject('doomtransition', { js_id: 'transition', speed: .01 });
+    this.transition.reset();
+    this.transition.begin();
+
   },
   loadTexture(name) {
     let tex = this.iwad.getTexture(name);
@@ -203,6 +207,7 @@ screen.orientation.addEventListener('change', ev => this.handleOrientationChange
     this.face.reset();
     this.won = false;
     this.lost = false;
+    this.transition.begin();
   },
   testGuess() {
     let guess = this.guesses[this.currentguess.num],
